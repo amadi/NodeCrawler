@@ -1,28 +1,8 @@
-//Returns an array with only unique elements
-var unique = function(arr) {
-  var a = [];
-  var l = arr.length;
-  for (var i = 0; i < l; i++) {
-    for(var j=i+1; j<l; j++) {
-      // if this[i] is found later in the array
-      if (arr[i] === arr[j]) 
-        j = ++i;
-      }
-      a.push(arr[i]);
-  }
-  return a;
-};
-
-function indexInArray(arr, val) {
-  for (var i = 0; i<arr.length; i++) if(arr[i]==val) return true;
-  return false; 
-}
-
 var libxml = require("libxmljs"),
     sys = require("sys"),
     url = require("url"),
-    http = require("http");
-
+    http = require("http"),
+    functions = require("./functions");
 
 var parsePage = function(string) {
     var parsed = libxml.parseHtmlString(string);
@@ -41,14 +21,20 @@ var parsePage = function(string) {
 
     return destinations;
 }
-var getPage = function(URL, callback) {
+var clientSetup = function(URL, HOST) {
   var options = {
-                  host:"mail.ru", 
+                  host:HOST, 
                   port:80,
                   path:URL,
-                  method:"GET"
+                  method:"GET",
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:13.0) Gecko/20100101 Firefox/13.0.1'
+                  }
                 };
-  var request = http.request(options, function(response){
+  return options;
+}
+var getPage = function(URL, callback) {
+  var request = http.request(clientSetup(URL,'frik.loc'), function(response){
     sys.puts('STATUS: ' + response.statusCode);
     //sys.puts('HEADERS: ' + JSON.stringify(response.headers));
     if (response.statusCode == '200'){
@@ -76,7 +62,7 @@ var visited_pages = [];
 
 var get_next_page = function() {
   for (page in known_pages) {
-    if (known_pages[page] && !indexInArray(visited_pages, known_pages[page])) {
+    if (known_pages[page] && !functions.findInArray(visited_pages, known_pages[page])) {
       visited_pages.push(known_pages[page]);
       sys.puts('Visited pages: ' + visited_pages.length);
       return known_pages[page];
@@ -88,7 +74,7 @@ var crawl_page = function(URL){
   sys.puts('Visiting ' + URL);
   getPage(URL, function(text) {
     var links = parsePage(text);
-    known_pages = unique(known_pages.concat(links));
+    known_pages = functions.unique(known_pages.concat(links));
     sys.puts('Known pages: ' + known_pages.length);
     if (visited_pages.length < known_pages.length){
       crawl_page(get_next_page());  
@@ -96,4 +82,7 @@ var crawl_page = function(URL){
   });
 }
 
-crawl_page('/');
+//crawl_page('/');
+getPage('/client.php', function(text){
+  sys.puts(text);
+});
