@@ -1,3 +1,4 @@
+//Returns an array with only unique elements
 var unique = function(arr) {
   var a = [];
   var l = arr.length;
@@ -32,7 +33,9 @@ var parsePage = function(string) {
         var attr = links[link].attr('href');
         if (attr && attr.value) {
           var url_parts = url.parse(attr.value());
-          destinations.push(url_parts.pathname);
+          if (url_parts.pathname){
+            destinations.push(url_parts.pathname);
+          }
         }
     }
 
@@ -40,7 +43,7 @@ var parsePage = function(string) {
 }
 var getPage = function(URL, callback) {
   var options = {
-                  host:"frik.loc", 
+                  host:"mail.ru", 
                   port:80,
                   path:URL,
                   method:"GET"
@@ -48,14 +51,19 @@ var getPage = function(URL, callback) {
   var request = http.request(options, function(response){
     sys.puts('STATUS: ' + response.statusCode);
     //sys.puts('HEADERS: ' + JSON.stringify(response.headers));
-    response.setEncoding('utf8');
-    var text = '';
-    response.on('data', function (chunk) {
-      text += chunk;
-    });
-    response.on('end', function(){
-      callback(text);
-    });
+    if (response.statusCode == '200'){
+      response.setEncoding('utf8');
+      var text = '';
+      response.on('data', function (chunk) {
+        text += chunk;
+      });
+      response.on('end', function(){
+        callback(text);
+      });
+    } else {
+      sys.puts('Bad response...');
+      crawl_page('/');
+    }
   });
   request.end();
 };
@@ -68,7 +76,7 @@ var visited_pages = [];
 
 var get_next_page = function() {
   for (page in known_pages) {
-    if (known_pages[page] && !indexInArray(visited_pages,known_pages[page])) {
+    if (known_pages[page] && !indexInArray(visited_pages, known_pages[page])) {
       visited_pages.push(known_pages[page]);
       sys.puts('Visited pages: ' + visited_pages.length);
       return known_pages[page];
@@ -82,11 +90,10 @@ var crawl_page = function(URL){
     var links = parsePage(text);
     known_pages = unique(known_pages.concat(links));
     sys.puts('Known pages: ' + known_pages.length);
-    crawl_page(get_next_page());
+    if (visited_pages.length < known_pages.length){
+      crawl_page(get_next_page());  
+    }
   });
 }
-
-
-
 
 crawl_page('/');
