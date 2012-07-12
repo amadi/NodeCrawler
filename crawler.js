@@ -34,7 +34,7 @@ var clientSetup = function(URL, HOST) {
   return options;
 }
 var getPage = function(URL, callback) {
-  var request = http.request(clientSetup(URL,'frik.loc'), function(response){
+  var request = http.request(clientSetup(URL,'80.250.219.94'), function(response){
     sys.puts('STATUS: ' + response.statusCode);
     //sys.puts('HEADERS: ' + JSON.stringify(response.headers));
     if (response.statusCode == '200'){
@@ -82,7 +82,7 @@ var crawl_page = function(URL){
   });
 }
 
-//crawl_page('/');
-getPage('/client.php', function(text){
-  sys.puts(text);
-});
+crawl_page('/');
+//getPage('/client.php', function(text){
+//  sys.puts(text);
+//});
